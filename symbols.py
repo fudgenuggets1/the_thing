@@ -1,19 +1,24 @@
-import pygame
+import pygame, images
 from pygame.locals import *
 
 
-class symbol(pygame.sprite.Sprite):
+class Symbol(pygame.sprite.Sprite):
 
 	images = pygame.sprite.Group()
 	
-	def __init__(self):
+	def __init__(self, image, x, y, color=None):
 
 		pygame.sprite.Sprite.__init__(self)
-		self.image = jill_image.image.convert()
+		image = images.Image(image, x, y, color)
+		self.image = image.image
 		 # Make our top-left corner the passed-in location.
 		self.rect = self.image.get_rect()
-		self.rect.y = 472
-		self.rect.x = 50
+		self.rect.y = x
+		self.rect.x = y
+		self.color = color
+		self.clicked = False
+		
+		Symbol.images.add(self)
 
 	def update(self, screen):
 
@@ -27,9 +32,22 @@ class symbol(pygame.sprite.Sprite):
 			self.rect.x += Jack.change_x
 			self.rect.y += Jack.change_y
 		except:
+			
+			if self.color:
+				pygame.draw.rect(screen, self.color, (self.rect.x, self.rect.y, 64, 64))
 			screen.blit(self.image, (self.rect.x, self.rect.y))
-			print(self.image + self.rect.x + self.rect.y)
 
-	def effect(ev):
 
-		pass
+	def mouse_over(self):
+		self.mouse_on = True
+	def mouse_off(self):
+		self.mouse_on = False
+	def do_action(self):
+		self.clicked = True
+		from game import Game
+		Game.DOORMOUSE = True
+
+
+
+
+

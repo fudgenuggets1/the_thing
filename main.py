@@ -1,4 +1,4 @@
-import pygame
+import pygame, pyganim
 from interaction import interaction
 from game import Game
 
