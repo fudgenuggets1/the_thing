@@ -87,7 +87,7 @@ class Game():
 	def clear_board():
 
 		Game.images[:] = []
-		Game.images = [thing_symbol]
+		Game.images = [thing_image, b_image]
 
 
 
