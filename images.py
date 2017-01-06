@@ -18,9 +18,7 @@ class Image(pygame.sprite.Sprite):
 		mouse_x = mouse_pos[0]
 		mouse_y = mouse_pos[1]
 		self.x, self.y = mouse_x, mouse_y
-		screen.blit(self.image, (self.x-32, self.y-32))
-
-
+		screen.blit(self.image, (self.x-16, self.y-16))
 
 
 class Text_Image(Image):

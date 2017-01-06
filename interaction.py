@@ -1,6 +1,7 @@
 import pygame, sys
 from pygame.locals import *
 from symbols import Symbol 
+from game import Game
 
 def toggle_fullscreen():
 	screen = pygame.display.get_surface()
@@ -55,3 +56,6 @@ def interaction(screen):
 			for button in Symbol.images:
 				if button.mouse_on:
 					button.do_action()
+					break
+				if Game.MOUSE:
+					Game.place_symbol()

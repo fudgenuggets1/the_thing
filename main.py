@@ -1,4 +1,4 @@
-import pygame
+import pygame, pyganim
 from interaction import interaction
 from game import Game
 
@@ -16,7 +16,7 @@ FLORAL_WHITE = (255,250,240)
 
 pygame.init()
 
-screen = pygame.display.set_mode((640, 480))
+screen = pygame.display.set_mode((720, 481))
 
 clock = pygame.time.Clock()
 FPS = 20
