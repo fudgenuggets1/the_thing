@@ -16,7 +16,7 @@ FLORAL_WHITE = (255,250,240)
 
 pygame.init()
 
-screen = pygame.display.set_mode((640, 500)) # Map Editor
+screen = pygame.display.set_mode((720, 481)) # Map Editor
 
 clock = pygame.time.Clock()
 FPS = 20
