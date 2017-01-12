@@ -40,8 +40,8 @@ class Game():
 		red_vent_symbol,
 		blue_vent_symbol,
 	]
-	dragon = The_Thing(dragon_png, 1)
-	hunter = Player(hunter_png, 16)
+	dragon = The_Thing(dragon_png, 0)
+	hunter = Player(hunter_png, 15)
 	pieces = [hunter, dragon]
 	turn_number = 0
 	turn = 0
@@ -82,10 +82,8 @@ class Game():
 		if Game.dragon.room_number == Game.hunter.room_number:
 			if not Game.hunter.second_chance:
 				Game.end_game(screen, Game.dragon)
-			else:
+			elif Game.hunter.second_chance and not Game.dragon.moving_far:
 				Game.room_choice(Game.dragon)
-				Game.hunter.second_chance = False
-				Game.dragon.visible = True
 		if Game.hunter.antidote == 4:
 			Game.end_game(screen, Game.hunter)
 
@@ -128,14 +126,15 @@ class Game():
 
 		Functions.text_to_screen(screen, "%s wins!" % winner.name, 320, 240, 100, (0, 155, 0))
 		Game.pause_for = True
+		Game.dragon.visible = True
 
 	@staticmethod
 	def room_choice(piece):
 
-		number = random.randint(1, 16)
-		while number == piece.room_number:
-			number = random.randint(1, 16)
-		piece.room_number = number
+		number = random.randint(0, 15)
+		while number == Game.dragon.room_number and number != Game.hunter.room_number:
+			number = random.randint(0, 15)
+		piece.moving_far = number
 
 
 

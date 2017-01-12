@@ -72,7 +72,8 @@ def interaction(screen):
 					elif event.key == pygame.K_v:
 						Room.move_piece(Game.dragon, 4)
 			else:
-				Game.hunter.room.card.use_card(Room.room_list)
+				if Game.hunter.room.card:
+					Game.hunter.room.card.use_card(Room.room_list)
 
 		for button in Symbol.images:
 			if button.rect.x+button.rect.w > mouse_x > button.rect.x and button.rect.y+button.rect.h > mouse_y > button.rect.y:

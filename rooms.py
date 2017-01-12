@@ -98,20 +98,19 @@ class Room():
 	@staticmethod
 	def move_piece(piece, direction):
 		from game import Game
-		n = piece.room_number - 1
+		n = piece.room_number
 		current_room = Room.room_list[n]
 		if piece.card_effect == None:
 			try:	
 				if current_room.doors[direction] == 1:
 					if direction == 1:
-						piece.room_number += 1
+						piece.moving += 1
 					elif direction == 0:
-						piece.room_number -= 1
+						piece.moving -= 1
 					elif direction == 3:
-						piece.room_number += 4
+						piece.moving += 4
 					else:
-						piece.room_number -= 4
-					Game.change_turn(piece)
+						piece.moving -= 4
 
 			except:
 				if direction == 4:
@@ -120,7 +119,7 @@ class Room():
 						for room in Room.room_list:
 							if room.vent == vent_number and room != current_room:
 								new_number = Room.room_list.index(room)
-								piece.room_number = new_number + 1
+								piece.room_number = new_number
 								Game.change_turn(piece)
 								break
 
@@ -129,8 +128,7 @@ class Room():
 		else:
 			Game.change_turn(piece)
 
-
-
+	
 
 
 

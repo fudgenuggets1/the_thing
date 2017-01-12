@@ -65,7 +65,6 @@ class Card(pygame.sprite.Sprite):
 		elif self.name == "2nd Chance":
 			Game.hunter.second_chance = True
 		elif self.name == "Trampoline" or self.name == "Teleport":
-			print 1
 			Game.room_choice(Game.hunter)
 		elif self.name == "Radar":
 			Game.dragon.visible = True

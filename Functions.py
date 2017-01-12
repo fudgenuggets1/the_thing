@@ -11,5 +11,4 @@ def text_to_screen(screen, text, x, y, size = 25,
 
 	screen.blit(text, (x-(size[0]/2), y-(size[1]/2)))
 
-	
-		
+
