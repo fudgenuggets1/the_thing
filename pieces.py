@@ -21,6 +21,10 @@ class Piece(pygame.sprite.Sprite):
 		self.card_effect = None
 		self.moving = 0
 		self.moving_far = 0
+		self.piece_type = None
+
+	def update_room(self):
+		self.room = Room.room_list[self.room_number]
 
 	def move_animation(self, direction):
 		from game import Game
@@ -41,8 +45,9 @@ class Piece(pygame.sprite.Sprite):
 		new_room = Room.room_list[self.room_number + direction]
 		if (self.rect.x - self.center_x) == new_room.x and (self.rect.y - self.center_y) == new_room.y:
 			self.moving = 0
-			self.room_number += direction
+			self.room_number += direction		
 			Game.change_turn(self)
+			
 
 	def go_across_board(self, new_room_number):
 		from game import Game
@@ -72,7 +77,22 @@ class Piece(pygame.sprite.Sprite):
 			self.rect.x += change_x
 		if (self.rect.y - self.center_y) != new_room.y:
 			self.rect.y += change_y
+		self.update_room()
 
+	def use_vent(self):
+		from game import Game
+
+		if not self.moving_far and self.room.vent:	
+			if self.piece_type == "Monster":
+				x = Game.hunter.room_number
+			elif self.piece_type == "Hunter":
+				x = Game.dragon.room_number
+			number = random.randint(0, 15)
+			while True:
+				if (x - 1 != number and x != number and x != number + 1) and (x - 4 != number and x + 4 != number):
+					break
+				number = random.randint(0, 15)
+			self.moving_far = number
 
 class The_Thing(Piece):
 
@@ -81,11 +101,12 @@ class The_Thing(Piece):
 		self.name = "Monster"
 		self.center_x = 24
 		self.center_y = 24
+		self.piece_type = "Monster"
 
 	def update(self, screen):
 		from rooms import Room
 		
-		self.room = Room.room_list[self.room_number]
+		self.update_room()
 		if not self.moving and not self.moving_far:	
 			self.rect.x = self.room.x + self.center_x
 			self.rect.y = self.room.y + self.center_y
@@ -95,6 +116,8 @@ class The_Thing(Piece):
 			self.go_across_board(self.moving_far)
 		if self.visible:
 			screen.blit(self.image, (self.rect.x, self.rect.y))
+		if self.room.vent:
+			self.use_vent()
 
 
 class Player(Piece):
@@ -102,18 +125,20 @@ class Player(Piece):
 	number = 1
 	antidote = 0
 
-	def __init__(self, image, room_number):
+	def __init__(self, image, room_number, name = "Hunter"):
 		Piece.__init__(self, image, room_number)
-		self.name = "Hunter"
+		self.name = name
 		self.center_x = 52
 		self.center_y = 32
 		self.antidote = Player.antidote
 		self.second_chance = False
+		self.piece_type = "Hunter"
 		Player.number += 1
 
 	def update(self, screen):
 		from rooms import Room
-		self.room = Room.room_list[self.room_number]
+		
+		self.update_room()
 		if not self.moving and not self.moving_far:	
 			self.rect.x = self.room.x + self.center_x
 			self.rect.y = self.room.y + self.center_y
@@ -123,6 +148,8 @@ class Player(Piece):
 			self.go_across_board(self.moving_far)
 		self.see_card = False
 		screen.blit(self.image, (self.rect.x, self.rect.y))
+		if self.room.vent:
+			self.use_vent()
 
 
 

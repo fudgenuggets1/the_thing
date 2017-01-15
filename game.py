@@ -4,6 +4,19 @@ from symbols import *
 from images import *
 from pieces import *
 from cards import *
+from yo_buttons import Button
+
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+BLUE = (0, 0, 200)
+GREEN = (0, 200, 0)
+RED = (200, 0, 0)
+PURPLE = (255, 0, 255)
+ORANGE = (255, 155, 0)
+BRIGHT_GREEN = (0, 255, 0)
+BRIGHT_BLUE = (0, 0, 255)
+BRIGHT_RED = (255, 0, 0)
+FLORAL_WHITE = (255,250,240)
 
 symbol_x = 648
 # Images
@@ -19,38 +32,41 @@ b_png = 'images/b.png'
 door_image = Image(door_png, 16, 16)
 thing_image = Image(dragon_png, 24, 64)
 b_image = Image(b_png, 552, 392)
-# Symbol instances
-clear_symbol = Symbol(clear_png, symbol_x, 8, action="clear")
-door_symbol = Symbol(door_png, symbol_x, 96, (0, 200, 0))
-door_vertical_symbol = Symbol(door_vertical_png, symbol_x, 136, (0, 200, 0), "door_vertical")
-red_vent_symbol = Symbol(red_vent_png, symbol_x, 200, (200, 0, 0), "red_vent")
-blue_vent_symbol = Symbol(blue_vent_png, symbol_x, 240, (200, 0, 0), "blue_vent")
 # Card instances
 card1 = Card(228, 164)
-
+# 
 
 class Game():
 
-	MOUSE = False
-	images = []
-	symbols = [
-		clear_symbol,
-		door_symbol,
-		door_vertical_symbol,
-		red_vent_symbol,
-		blue_vent_symbol,
-	]
 	dragon = The_Thing(dragon_png, 0)
 	hunter = Player(hunter_png, 15)
+	hunter2 = Player(hunter_png, 15, "Hunter2")
 	pieces = [hunter, dragon]
+	hunters = [hunter]
+	hunter_number = 0
+	current_hunter = hunters[hunter_number]
 	turn_number = 0
 	turn = 0
 	pause_for = None
+	playing = False
+	single_player = Button("1H", 100, 480, 30, 20, GREEN, BRIGHT_GREEN, "single_player")
+	two_player = Button("2H", 140, 480, 30, 20, GREEN, BRIGHT_GREEN, "two_player")
+	restart_buttons = [single_player, two_player]
 
 	def __init__(self, screen):
 
 		duhhh = True
 		Room.room_list = Room.make_map(screen)
+
+	def process(self, screen):
+
+		self.update(screen)
+
+	def home_screen(self, screen):
+
+		single_player = Button("Play: 1 Hunter", 250, 100, 200, 40, GREEN, BRIGHT_GREEN, "single_player")
+		two_player = Button("Play: 2 Hunters", 250, 160, 200, 40, GREEN, BRIGHT_GREEN, "two_player")
+		Button.update(screen, Button.List)
 
 	def update(self, screen):
 
@@ -61,23 +77,31 @@ class Game():
 		# DRAWING
 		Room.update(screen)
 
-		if Game.MOUSE:
-			
-			Game.MOUSE.update(screen)
-
-		Game.update_symbols(screen)
 		for piece in Game.pieces:
 			piece.update(screen)
 
 		Game.turn = Game.pieces[Game.turn_number]
+		Game.current_hunter = Game.hunters[Game.hunter_number]
+
+		# Logic
+		self.game_logic(screen)
+
+	def game_logic(self, screen):
 
 		if Game.hunter.room.card:
 			Game.pause_for = Game.hunter
 			Game.hunter.room.card.display_card(screen)
 		else:
-			Functions.text_to_screen(screen, "%s's turn" % Game.turn.name, 300, 492, 20, (0,0,0))
 			antidotes = 4 - Game.hunter.antidote
-			Functions.text_to_screen(screen, "Antidotes left: %s" % antidotes, 500, 492, 20, (0,0,0))
+			text_list = [
+				["Restart:", 40, 492],
+				["%s's turn" % Game.turn.name, 320, 492],
+				["Antidotes left: %s" % antidotes, 550, 492],
+			]
+			for text in text_list:
+				Functions.text_to_screen(screen, text[0], text[1], text[2], 20, BLACK)
+			Button.update(screen, Game.restart_buttons)
+
 
 		if Game.dragon.room_number == Game.hunter.room_number:
 			if not Game.hunter.second_chance:
@@ -87,40 +111,26 @@ class Game():
 		if Game.hunter.antidote == 4:
 			Game.end_game(screen, Game.hunter)
 
-	@staticmethod
-	def place_symbol():
-
-		if Game.MOUSE:
-
-			new_image = Game.MOUSE
-			Game.images.append(new_image)
-			Game.MOUSE = None
-
-	@staticmethod
-	def update_symbols(screen):
-
-		for img in Game.images:
-			screen.blit(img.image, (img.x-16, img.y-16))
-
-		for symbol in Game.symbols:	
-			symbol.update(screen)
-
-	@staticmethod
-	def clear_board():
-
-		Game.images[:] = []
-		Game.images = [thing_image, b_image]
+		for piece in Game.pieces:
+			if piece.room.radar_room:
+				Game.dragon.visible = True
 
 	@staticmethod
 	def change_turn(last_moved):
 
 		for piece in Game.pieces:
-
 			if piece != last_moved:
-				Game.turn_number = Game.pieces.index(piece)
+				pass
 			else:
 				piece.card_effect = None
-		
+		n = Game.pieces.index(last_moved)
+		if n < len(Game.pieces) - 1:
+			Game.turn_number = n + 1
+		else:
+			Game.turn_number = 0
+
+		Game.dragon.visible = False
+
 	@staticmethod
 	def end_game(screen, winner):
 
@@ -132,9 +142,24 @@ class Game():
 	def room_choice(piece):
 
 		number = random.randint(0, 15)
-		while number == Game.dragon.room_number and number != Game.hunter.room_number:
+		while number == Game.dragon.room_number or number == Game.hunter.room_number:
 			number = random.randint(0, 15)
 		piece.moving_far = number
+
+	@staticmethod
+	def restart():
+
+		Game.dragon = The_Thing(dragon_png, 0)
+		Game.hunter = Player(hunter_png, 15)
+		Game.hunter2 = Player(hunter_png, 15, "Hunter2")
+		Game.pieces = [Game.hunter, Game.dragon]
+		Game.hunters = [Game.hunter]
+		Game.turn_number = 0
+		Game.turn = 0
+		Game.pause_for = None
+
+
+
 
 
 

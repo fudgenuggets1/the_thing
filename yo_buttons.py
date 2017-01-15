@@ -24,7 +24,7 @@ class Button():
             pygame.draw.rect(screen, button.color, (button.x, button.y, button.w, button.h))
             x = button.w / 2
             y = button.h / 2
-            Functions.text_to_screen(screen, button.msg, button.x+x, button.y+y)
+            Functions.text_to_screen(screen, button.msg, button.x+x, button.y+y, 20)
 
     def mouse_over(self):
         self.color = self.highlight_color
@@ -32,8 +32,15 @@ class Button():
     def mouse_off(self):
         self.color = self.regular_color
         self.mouse_on = False
+    @staticmethod
+    def clear_list():
+        Button.List[:] = []
     def do_action(self):
-        pass
 
+        from game import Game
+        if self.action == "single_player":    
+            Game.playing = True
+            Button.clear_list()
+            Game.restart()
 
 

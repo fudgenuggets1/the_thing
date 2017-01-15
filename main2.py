@@ -16,7 +16,7 @@ FLORAL_WHITE = (255,250,240)
 
 pygame.init()
 
-screen = pygame.display.set_mode((640, 500))
+screen = pygame.display.set_mode((800, 625))
 clock = pygame.time.Clock()
 FPS = 20
 total_frames = 0
@@ -30,7 +30,7 @@ while True:
 
 	screen.fill(FLORAL_WHITE)
 	
-	game.process(screen)
+	game.update(screen)
 
 	interaction(screen)
 

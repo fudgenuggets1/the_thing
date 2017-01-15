@@ -7,21 +7,18 @@ CARD_FRONT = pygame.image.load('images/card_front2.png')
 class Card(pygame.sprite.Sprite):
 
 	deck = []
-	card_rooms = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13]
+	card_rooms = set([0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 13])
 	card_list = [
 		["Antidote", "One step closer to\n defeating the monster!"],
 		["Antidote", "One step closer to\n defeating the monster!"],
 		["Antidote", "One step closer to\n defeating the monster!"],
 		["Antidote", "One step closer to\n defeating the monster!"],
-		["Joker", "Gotcha!"],
 		["Paralyze", "You can't move next\n turn!"],
 		["Paralyze", "You can't move next\n turn!"],
-		["Radar", "See where the monster\n is!"],
 		["Radar", "See where the monster\n is!"],
 		["Gas", "The monster can't move\n for 1 turn!"],
 		["Gas", "The monster can't move\n for 1 turn!"],
 		["2nd Chance", "If the Monster catches\n you, he gets teleported\n to another room!\n\n(Only works once!)"],
-		["Teleport", "Move to any room\n on the board...\nOr stay in this one\n if you want to!"],
 		["Trampoline", "Get bounced to\n a random room!"],
 	]
 
@@ -64,7 +61,7 @@ class Card(pygame.sprite.Sprite):
 			Game.dragon.card_effect = self.name
 		elif self.name == "2nd Chance":
 			Game.hunter.second_chance = True
-		elif self.name == "Trampoline" or self.name == "Teleport":
+		elif self.name == "Trampoline":
 			Game.room_choice(Game.hunter)
 		elif self.name == "Radar":
 			Game.dragon.visible = True

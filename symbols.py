@@ -33,23 +33,10 @@ class Symbol(pygame.sprite.Sprite):
 	def mouse_off(self):
 		self.mouse_on = False
 	def do_action(self):
-		self.clicked = True
+		
 		from game import Game
-		image = None
-		if self.action == "door":
-			image = images.Image('images/small_door.png', self.rect.x, self.rect.y)
-		elif self.action == "door_vertical":
-			image = images.Image('images/small_door_vertical.png', self.rect.x, self.rect.y)
-		elif self.action == "red_vent":
-			image = images.Image('images/red_vent.png', self.rect.x, self.rect.y)
-		elif self.action == "blue_vent":
-			image = images.Image('images/blue_vent.png', self.rect.x, self.rect.y)
-		elif self.action == "clear":
-			Game.clear_board()
-
-		if image:	
-			Game.MOUSE = image
-
+		
+		pass
 
 
 

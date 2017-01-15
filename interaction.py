@@ -3,6 +3,7 @@ from pygame.locals import *
 from symbols import Symbol 
 from game import Game
 from rooms import Room
+from yo_buttons import Button
 
 def toggle_fullscreen():
 	screen = pygame.display.get_surface()
@@ -68,23 +69,23 @@ def interaction(screen):
 						Room.move_piece(Game.dragon, 3)
 					elif event.key == pygame.K_a:
 						Room.move_piece(Game.dragon, 2)
-
-					elif event.key == pygame.K_v:
-						Room.move_piece(Game.dragon, 4)
 			else:
 				if Game.hunter.room.card:
 					Game.hunter.room.card.use_card(Room.room_list)
 
-		for button in Symbol.images:
-			if button.rect.x+button.rect.w > mouse_x > button.rect.x and button.rect.y+button.rect.h > mouse_y > button.rect.y:
+		for button in Button.List:
+			if button.x+button.w > mouse_x > button.x and button.y+button.h > mouse_y > button.y:
 				button.mouse_over()
 			else:
 				button.mouse_off()
 
 		if event.type == pygame.MOUSEBUTTONDOWN:
-			for button in Symbol.images:
+			for button in Button.List:
 				if button.mouse_on:
 					button.do_action()
-					break
-				if Game.MOUSE:
-					Game.place_symbol()
+
+
+
+
+
+
