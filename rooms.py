@@ -1,4 +1,4 @@
-import pygame, random
+import pygame, random, copy
 
 SANDY_BROWN = (244,164,96)
 SMALL_DOOR = pygame.image.load('images/small_door.png')
@@ -46,18 +46,18 @@ class Room():
 
 
 	@staticmethod
-	def make_map(screen):
+	def make_map():
 		from cards import Card
 
-		card_list = Card.card_list
-		random.shuffle(card_list)
+		cards = copy.deepcopy(Card.card_list)
+		random.shuffle(cards)
 
 		board = []
 		for x in range(0, 640, 160):
 			for y in range(0, 480, 120):
 				rectangle = Room(x, y, 160, 120)
 				if rectangle.number - 1 in Card.card_rooms:
-					new_card = card_list.pop()
+					new_card = cards.pop()
 					rectangle.card = Card(x+68, y+46, new_card[0], new_card[1])
 
 				board.append(rectangle)

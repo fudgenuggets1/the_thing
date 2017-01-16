@@ -32,31 +32,13 @@ b_png = 'images/b.png'
 door_image = Image(door_png, 16, 16)
 thing_image = Image(dragon_png, 24, 64)
 b_image = Image(b_png, 552, 392)
-# Card instances
-card1 = Card(228, 164)
 # 
 
 class Game():
 
-	dragon = The_Thing(dragon_png, 0)
-	hunter = Player(hunter_png, 15)
-	hunter2 = Player(hunter_png, 15, "Hunter2")
-	pieces = [hunter, dragon]
-	hunters = [hunter]
-	hunter_number = 0
-	current_hunter = hunters[hunter_number]
-	turn_number = 0
-	turn = 0
-	pause_for = None
-	playing = False
-	single_player = Button("1H", 100, 480, 30, 20, GREEN, BRIGHT_GREEN, "single_player")
-	two_player = Button("2H", 140, 480, 30, 20, GREEN, BRIGHT_GREEN, "two_player")
-	restart_buttons = [single_player, two_player]
-
 	def __init__(self, screen):
 
-		duhhh = True
-		Room.room_list = Room.make_map(screen)
+		Game.restart()
 
 	def process(self, screen):
 
@@ -149,15 +131,23 @@ class Game():
 	@staticmethod
 	def restart():
 
+		Room.room_list [:] = []
+		Room.number = 1
 		Game.dragon = The_Thing(dragon_png, 0)
 		Game.hunter = Player(hunter_png, 15)
 		Game.hunter2 = Player(hunter_png, 15, "Hunter2")
 		Game.pieces = [Game.hunter, Game.dragon]
 		Game.hunters = [Game.hunter]
+		Game.hunter_number = 0
+		Game.current_hunter = Game.hunters[Game.hunter_number]
 		Game.turn_number = 0
 		Game.turn = 0
 		Game.pause_for = None
-
+		Game.playing = False
+		Game.single_player = Button("1H", 100, 480, 30, 20, GREEN, BRIGHT_GREEN, "single_player")
+		Game.two_player = Button("2H", 140, 480, 30, 20, GREEN, BRIGHT_GREEN, "two_player")
+		Game.restart_buttons = [Game.single_player, Game.two_player]
+		Room.room_list = Room.make_map()
 
 
 
