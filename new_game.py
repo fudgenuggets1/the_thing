@@ -136,6 +136,7 @@ class Piece(pygame.sprite.Sprite):
 			image = hunter_png
 			center_x = 52
 			center_y = 32
+			self.second_chance = False
 
 		self.image = pygame.image.load(image)
 		 # Make our top-left corner the passed-in location.
