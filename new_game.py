@@ -1,6 +1,8 @@
 import pygame, sys, copy, random
 from Functions import text_to_screen
 from time import sleep
+from yo_buttons import Button
+from vision import Visible
 
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -43,6 +45,7 @@ rectangles = []
 antidotes_left = 4
 antidotes = 0
 pause_for = False
+
 gas = False
 radar = True
 starting_spot = True
@@ -78,6 +81,7 @@ def interaction(screen):
 	mouse_pos = pygame.mouse.get_pos()
 	mouse_x = mouse_pos[0]
 	mouse_y = mouse_pos[1]
+	global Players
 
 	for event in pygame.event.get():
 
@@ -86,9 +90,20 @@ def interaction(screen):
 			pygame.quit()
 			sys.exit()
 
-		if event.type == pygame.KEYDOWN:
+		if event.type == pygame.KEYDOWN and Playing:
 			# Fullscreen mode
 			process_key(event)
+
+		if not Players:
+			for button in home_screen.Button_List:
+				if button.x+button.w > mouse_x > button.x and button.y+button.h > mouse_y > button.y:
+					button.mouse_over()
+				else:
+					button.mouse_off()
+			if event.type == pygame.MOUSEBUTTONDOWN:
+				for button in home_screen.Button_List:
+					if button.mouse_on:
+						Players = button.action
 
 def process_key(event):
 	
@@ -98,32 +113,32 @@ def process_key(event):
 		toggle_fullscreen()
 		
 	if not pause_for:	
-		if current_turn == Hunter:	
+		if current_turn.piece_type == "Hunter":	
 			if event.key == pygame.K_LEFT:
-				move_piece(Hunter, 2)
+				move_piece(current_turn, 2)
 			elif event.key == pygame.K_RIGHT:
-				move_piece(Hunter, 3)
+				move_piece(current_turn, 3)
 			elif event.key == pygame.K_UP:
-				move_piece(Hunter, 0)
+				move_piece(current_turn, 0)
 			elif event.key == pygame.K_DOWN:
-				move_piece(Hunter, 1)
-		elif current_turn == Monster:
+				move_piece(current_turn, 1)
+		elif current_turn.piece_type == "Monster":
 			if event.key == pygame.K_a:
-				move_piece(Monster, 2)
+				move_piece(current_turn, 2)
 			elif event.key == pygame.K_d:
-				move_piece(Monster, 3)
+				move_piece(current_turn, 3)
 			elif event.key == pygame.K_w:
-				move_piece(Monster, 0)
+				move_piece(current_turn, 0)
 			elif event.key == pygame.K_s:
-				move_piece(Monster, 1)
+				move_piece(current_turn, 1)
 	else:
-		if Hunter.room.card:
-			Hunter.room.card.use_card(Hunter)
+		if pause_for.room.card:
+			pause_for.room.card.use_card(pause_for)
 
 
 class Piece(pygame.sprite.Sprite):
 
-	def __init__(self, room_number, piece_type):
+	def __init__(self, room_number, piece_type, name=None):
 
 		pygame.sprite.Sprite.__init__(self)
 		self.piece_type = piece_type
@@ -146,6 +161,7 @@ class Piece(pygame.sprite.Sprite):
 		self.center_x = center_x
 		self.center_y = center_y
 
+		self.name = name
 		self.room_number = room_number
 		self.room = None
 		self.visible = True
@@ -165,18 +181,14 @@ class Piece(pygame.sprite.Sprite):
 		self.movement()
 		if self.visible:
 			screen.blit(self.image, (self.rect.x, self.rect.y))
+			x = self.name[-1:]
+			text_to_screen(screen, x, self.rect.x + self.center_x, self.rect.y - 15, 30, RED)
 
 	def movement(self):
 		global pause_for
 
-		if self.piece_type == "Hunter":
-			if self.room.card:
-				pause_for = True
-			else:
-				pause_for = False
-			pass
 		
-		elif self.piece_type == "Monster":	
+		if self.piece_type == "Monster":	
 			
 			if radar and not self.new_room_number and not self.random_room_number:	
 				self.change_display(False)
@@ -202,10 +214,17 @@ class Piece(pygame.sprite.Sprite):
 			self.visible = False
 
 	def move_animation(self, direction):
+		global gas, pause_for
 
 		if self.piece_type == "Monster":
 			self.change_display(False)
 			self.last_room = self.room_number
+			if gas:
+				self.new_room_number = None
+				if current_turn == Monsters[-1]:
+					gas = False
+				change_turn()
+
 		speed = 10
 		if direction == -1:
 			self.rect.y -= speed
@@ -224,6 +243,8 @@ class Piece(pygame.sprite.Sprite):
 			self.new_room_number = None
 			self.room_number += direction		
 			change_turn()
+			if self.piece_type == "Hunter" and self.room.card:
+				pause_for = True
 
 	def go_across_board(self, new_room_number):
 
@@ -247,22 +268,41 @@ class Piece(pygame.sprite.Sprite):
 		if (self.rect.y - self.center_y) != new_room.y:
 			self.rect.y += change_y
 		if (self.rect.x - self.center_x) == new_room.x and (self.rect.y - self.center_y) == new_room.y:
+			if self.piece_type == "Monster":
+				for hunter in Hunters:	
+					if self.room_number == hunter.room_number:
+						hunter.second_chance = False
 			self.room_number = self.random_room_number
 			self.random_room_number = None
-			if self.piece_type == "Monster":
-				Hunter.second_chance = False
 			self.update_room()
-			#change_turn()
+			
 	def use_vent(self):
 
 		if not self.random_room_number and self.room.vent:	
-			self.random_room_number = room_choice(self)
+			self.random_room_number = room_choice()
 
-Monster = Piece(0, "Monster")
-Hunter = Piece(24, "Hunter")
-pieces = [Hunter, Monster]
+	def change_type(self):
+		
+		self.piece_type = "Monster"
+		self.name = "Monster 2"
+		self.image = pygame.image.load(dragon_png)
+		self.center_x = 32
+		Hunters.remove(self)
+		Monsters.append(self)
+
+Monster = Piece(0, "Monster", "Monster 1")
+Hunter = Piece(24, "Hunter", "Hunter 1")
+Hunter2 = Piece(19, "Hunter", "Hunter 2")
+Hunter3 = Piece(23, "Hunter", "Hunter 3")
+pieces = []
+Hunters = [Hunter]
+Monsters = [Monster]
 turn_index = 0
-current_turn = pieces[turn_index]
+hunter_index = 0
+monster_index = 0
+current_turn = 0
+current_hunter = Hunter
+current_monster = Monster
 
 
 class Card(pygame.sprite.Sprite):
@@ -280,7 +320,7 @@ class Card(pygame.sprite.Sprite):
 		["Radar", "See where the monster\n is!"],
 		["Gas", "The monster can't move\n for 1 turn!"],
 		["Gas", "The monster can't move\n for 1 turn!"],
-		["2nd Chance", "If the Monster catches\n you, he gets teleported\n to another room!\n\n(Only works once!)"],
+		["2nd Chance", "If the monster catches\n you, he gets teleported\n to another room!\n\n(Only works once!)"],
 		["Trampoline", "Get bounced to\n a random room!"],
 		["Trampoline", "Get bounced to\n a random room!"],
 		["Joker", "Gotcha!"],
@@ -320,24 +360,23 @@ class Card(pygame.sprite.Sprite):
 
 	def use_card(self, piece):
 		sleep(1.5)
-		global pause_for, antidotes, radar
+		global pause_for, antidotes, radar, gas
 
 		if self.name == "Antidote":
 			antidotes += 1
 		elif self.name == "Paralyze":
 			piece.card_effect = self.name
 		elif self.name == "Gas":
-			Monster.card_effect = self.name
+			gas = True
 		elif self.name == "2nd Chance":
 			piece.second_chance = True
 		elif self.name == "Trampoline":
-			piece.random_room_number = room_choice(piece)
+			piece.random_room_number = room_choice()
 		elif self.name == "Radar":
 			radar = True
 
 		piece.room.card = None
 		pause_for = False
-
 
 class Room():
 
@@ -418,6 +457,22 @@ class Room():
 		return board
 
 
+class Home_Screen(Visible):
+
+	def __init__(self):
+
+		Visible.__init__(self)
+
+		buttons = [
+			["2 Player", 300, 200, 200, 50, GREEN, BRIGHT_GREEN, 2],
+			["3 Player", 300, 300, 200, 50, GREEN, BRIGHT_GREEN, 3],
+			["4 Player", 300, 400, 200, 50, GREEN, BRIGHT_GREEN, 4],
+		]
+		for item in buttons:
+			button = Button(item[0], item[1], item[2], item[3], item[4], item[5], item[6], item[7])
+			self.Button_List.append(button)
+home_screen = Home_Screen()
+
 def move_piece(piece, direction):
 	global starting_spot
 	n = piece.room_number
@@ -451,10 +506,10 @@ def change_turn():
 	else:
 		turn_index = 0
 
-def room_choice(p):
+def room_choice():
 	number = random.randint(0, 24)
 	for piece in pieces:
-		#if piece.piece_type != p.piece_type:
+		
 		x = piece.room_number
 
 		while True:
@@ -476,6 +531,18 @@ def check_rooms():
 		else:
 			piece.radar_room = False
 
+	for hunter in Hunters:
+		for monster in Monsters:
+			if hunter.room_number == monster.room_number:
+				if hunter.second_chance and not monster.ran:
+					monster.random_room_number = room_choice()
+				elif not hunter.second_chance:
+					if len(Hunters) < 2:
+						end_game(screen, monster)
+					else:
+						hunter.change_type()
+
+
 def get_new_map():
 
 	Room.room_list[:] = []
@@ -485,9 +552,16 @@ get_new_map()
 def end_game(screen, winner):
 	global pause_for
 	text_to_screen(screen, "%s wins!" % winner.piece_type, 400, 200, 120, (0, 155, 0))
-	#pause_for = True
 	Monster.change_display(True)
 
+def display_info(screen):
+	# Info
+	pygame.draw.rect(screen, (155, 155, 155), (0, 600, 800, 25))
+	text_to_screen(screen, "%s's turn" % current_turn.name, 400, 612)
+	text_to_screen(screen, "Antidotes left: %s" % antidotes_left, 700, 612)
+
+Players = None
+Playing = False
 while True:
 
 	screen = pygame.display.get_surface()
@@ -497,38 +571,49 @@ while True:
 	interaction(screen)
 	antidotes_left = 4 - antidotes
 
-	# Logic
-	if not pause_for:	
-		Room.update(screen)
+	if Playing:
+		# Logic
+		if not pause_for:	
+			Room.update(screen)
 
-		for piece in pieces:
-			piece.update(screen)
+			for piece in pieces:
+				piece.update(screen)
 
-		current_turn = pieces[turn_index]
+			current_turn = pieces[turn_index]
 
-		if not starting_spot:
-			check_rooms()
-		
-	else:
-		for piece in pieces:
-			if piece.room.card and piece.piece_type == "Hunter":
-				piece.room.card.display_card(screen)
 
-	# Check if win or lose
-	if Monster.room_number == Hunter.room_number and not Hunter.second_chance:
+			if not starting_spot:
+				check_rooms()
 			
-		end_game(screen, Monster)
-	elif Monster == Hunter.room_number and Hunter.second_chance:
-			Monster.random_room_number = room_choice(Monster)
-			Hunter.second_chance = False
+			if current_turn.piece_type == "Hunter":
+				current_hunter = current_turn
+			else:
+				current_monster = current_turn
 
-	if antidotes == 4:
-		end_game(screen, Hunter)
+			for piece in pieces:
+				if piece.room.card and piece.piece_type == "Hunter":
+					pause_for = piece
 
-	# Info
-	pygame.draw.rect(screen, (155, 155, 155), (0, 600, 800, 25))
-	text_to_screen(screen, "%s's turn" % current_turn.piece_type, 400, 612)
-	text_to_screen(screen, "Antidotes left: %s" % antidotes_left, 700, 612)
+		else:
+			for piece in pieces:
+				if piece.room.card and piece.piece_type == "Hunter":
+					piece.room.card.display_card(screen)
+
+		# Check if win or lose
+		if antidotes == 4:
+			end_game(screen, Hunter)
+
+		display_info(screen)
+
+	else:
+		Button.update(screen, home_screen.Button_List)
+		if Players == 2:
+			pieces = [Hunter, Monster]
+			Playing = True
+		elif Players == 3:
+			pieces = [Hunter, Hunter2, Monster]
+			Hunters.append(Hunter2)
+			Playing = True
 
 	pygame.display.set_caption("The Thing     FPS: %s" % int(clock.get_fps()))
 	pygame.display.flip()

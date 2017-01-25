@@ -78,7 +78,7 @@ class Room():
 		Room.room_list[14].doors = [1, 1, 1, 0]
 		Room.room_list[15].doors = [1, 0, 1, 0]
 
-		Room.room_list[0].radar_room = True
+		#Room.room_list[0].radar_room = True
 		Room.room_list[11].radar_room = True
 		Room.room_list[14].radar_room = True
 		Room.room_list[15].radar_room = True
