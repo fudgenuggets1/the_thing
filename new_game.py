@@ -560,7 +560,7 @@ def mixer_upper():
 				taken.add(new_number)
 				break
 			else:
-				new_number = room_number()
+				new_number = room_choice()
 
 def get_new_map():
 
