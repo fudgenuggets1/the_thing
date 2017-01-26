@@ -138,6 +138,8 @@ def process_key(event):
 
 class Piece(pygame.sprite.Sprite):
 
+	monster_number = 2
+
 	def __init__(self, room_number, piece_type, name=None):
 
 		pygame.sprite.Sprite.__init__(self)
@@ -244,7 +246,7 @@ class Piece(pygame.sprite.Sprite):
 			self.room_number += direction		
 			change_turn()
 			if self.piece_type == "Hunter" and self.room.card:
-				pause_for = True
+				pause_for = self
 
 	def go_across_board(self, new_room_number):
 
@@ -284,11 +286,12 @@ class Piece(pygame.sprite.Sprite):
 	def change_type(self):
 		
 		self.piece_type = "Monster"
-		self.name = "Monster 2"
+		self.name = "Monster " + str(Piece.monster_number)
 		self.image = pygame.image.load(dragon_png)
 		self.center_x = 32
 		Hunters.remove(self)
 		Monsters.append(self)
+		Piece.monster_number += 1
 
 Monster = Piece(0, "Monster", "Monster 1")
 Hunter = Piece(24, "Hunter", "Hunter 1")
@@ -316,17 +319,16 @@ class Card(pygame.sprite.Sprite):
 		["Antidote", "One step closer to\n defeating the monster!"],
 		["Paralyze", "You can't move next\n turn!"],
 		["Paralyze", "You can't move next\n turn!"],
-		["Radar", "See where the monster\n is!"],
-		["Radar", "See where the monster\n is!"],
-		["Gas", "The monster can't move\n for 1 turn!"],
-		["Gas", "The monster can't move\n for 1 turn!"],
+		["Radar", "See the monster(s)!"],
+		["Radar", "See the monster(s)!"],
+		["Gas", "The monster(s) can't move\n for 1 turn!"],
+		["Gas", "The monster(s) can't move\n for 1 turn!"],
 		["2nd Chance", "If the monster catches\n you, he gets teleported\n to another room!\n\n(Only works once!)"],
 		["Trampoline", "Get bounced to\n a random room!"],
 		["Trampoline", "Get bounced to\n a random room!"],
-		["Joker", "Gotcha!"],
-		["Joker", "Gotcha!"],
-		["Joker", "Gotcha!"],
-		["Joker", "Gotcha!"],
+		["Bouncelator", "Monster(s) get bounced\n to a random room!!"],
+		["Bouncelator", "Monster(s) get bounced\n to a random room!!"],
+		["Mixer-Upper", "Ever player gets put\n in a random room!"],
 		["Joker", "Gotcha!"],
 		["Joker", "Gotcha!"],
 		["Joker", "Gotcha!"],
@@ -372,9 +374,15 @@ class Card(pygame.sprite.Sprite):
 			piece.second_chance = True
 		elif self.name == "Trampoline":
 			piece.random_room_number = room_choice()
+			while piece.random_room_number == piece.room_number:
+				piece.random_room_number = room_choice()
 		elif self.name == "Radar":
 			radar = True
-
+		elif self.name == "Bouncelator":
+			for monster in Monsters:
+				monster.random_room_number = room_choice()
+		elif self.name == "Mixer-Upper":
+			mixer_upper()
 		piece.room.card = None
 		pause_for = False
 
@@ -513,9 +521,8 @@ def room_choice():
 		x = piece.room_number
 
 		while True:
-			if (x - 1 != number and x + 1 != number) and x != number and (x - 5 != number and x + 5 != number):	
-				if number != 4 and number != 20:	
-					break
+			if (x - 1 != number and x + 1 != number) and x != number and (x - 5 != number and x + 5 != number) and (number != 4 and number != 20):	
+				break
 			number = random.randint(0, 24)
 	return number
 
@@ -534,14 +541,26 @@ def check_rooms():
 	for hunter in Hunters:
 		for monster in Monsters:
 			if hunter.room_number == monster.room_number:
-				if hunter.second_chance and not monster.ran:
+				if hunter.second_chance and not monster.random_room_number:
 					monster.random_room_number = room_choice()
 				elif not hunter.second_chance:
 					if len(Hunters) < 2:
 						end_game(screen, monster)
 					else:
 						hunter.change_type()
+						break
 
+def mixer_upper():
+	taken = set([])
+	for piece in pieces:
+		new_number = room_choice()
+		while True:
+			if new_number not in taken:
+				piece.random_room_number = new_number
+				taken.add(new_number)
+				break
+			else:
+				new_number = room_number()
 
 def get_new_map():
 
@@ -550,9 +569,9 @@ def get_new_map():
 get_new_map()
 
 def end_game(screen, winner):
-	global pause_for
+	global pause_for, radar
 	text_to_screen(screen, "%s wins!" % winner.piece_type, 400, 200, 120, (0, 155, 0))
-	Monster.change_display(True)
+	radar = True
 
 def display_info(screen):
 	# Info
@@ -581,7 +600,6 @@ while True:
 
 			current_turn = pieces[turn_index]
 
-
 			if not starting_spot:
 				check_rooms()
 			
@@ -595,13 +613,15 @@ while True:
 					pause_for = piece
 
 		else:
-			for piece in pieces:
-				if piece.room.card and piece.piece_type == "Hunter":
-					piece.room.card.display_card(screen)
+			#for piece in pieces:
+			#	if piece.room.card and piece.piece_type == "Hunter":
+			pause_for.room.card.display_card(screen)
 
 		# Check if win or lose
 		if antidotes == 4:
-			end_game(screen, Hunter)
+			for piece in pieces:
+				if piece.piece_type == "Hunter":
+					end_game(screen, piece)
 
 		display_info(screen)
 
@@ -613,6 +633,11 @@ while True:
 		elif Players == 3:
 			pieces = [Hunter, Hunter2, Monster]
 			Hunters.append(Hunter2)
+			Playing = True
+		elif Players == 4:
+			pieces = [Hunter, Hunter2, Hunter3, Monster]
+			Hunters.append(Hunter2)
+			Hunters.append(Hunter3)
 			Playing = True
 
 	pygame.display.set_caption("The Thing     FPS: %s" % int(clock.get_fps()))
