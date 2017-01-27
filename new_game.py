@@ -81,7 +81,7 @@ def interaction(screen):
 	mouse_pos = pygame.mouse.get_pos()
 	mouse_x = mouse_pos[0]
 	mouse_y = mouse_pos[1]
-	global Players
+	global Players, Playing
 
 	for event in pygame.event.get():
 
@@ -104,6 +104,17 @@ def interaction(screen):
 				for button in home_screen.Button_List:
 					if button.mouse_on:
 						Players = button.action
+		else:
+			for button in exit_list:
+				if button.x+button.w > mouse_x > button.x and button.y+button.h > mouse_y > button.y:
+					button.mouse_over()
+				else:
+					button.mouse_off()
+			if event.type == pygame.MOUSEBUTTONDOWN:
+				for button in exit_list:
+					if button.mouse_on:
+						Players = 0
+						Playing = False
 
 def process_key(event):
 	
@@ -292,20 +303,6 @@ class Piece(pygame.sprite.Sprite):
 		Hunters.remove(self)
 		Monsters.append(self)
 		Piece.monster_number += 1
-
-Monster = Piece(0, "Monster", "Monster 1")
-Hunter = Piece(24, "Hunter", "Hunter 1")
-Hunter2 = Piece(19, "Hunter", "Hunter 2")
-Hunter3 = Piece(23, "Hunter", "Hunter 3")
-pieces = []
-Hunters = [Hunter]
-Monsters = [Monster]
-turn_index = 0
-hunter_index = 0
-monster_index = 0
-current_turn = 0
-current_hunter = Hunter
-current_monster = Monster
 
 
 class Card(pygame.sprite.Sprite):
@@ -565,8 +562,8 @@ def mixer_upper():
 def get_new_map():
 
 	Room.room_list[:] = []
+	Room.number = 1
 	Room.room_list = Room.make_map()
-get_new_map()
 
 def end_game(screen, winner):
 	global pause_for, radar
@@ -578,9 +575,40 @@ def display_info(screen):
 	pygame.draw.rect(screen, (155, 155, 155), (0, 600, 800, 25))
 	text_to_screen(screen, "%s's turn" % current_turn.name, 400, 612)
 	text_to_screen(screen, "Antidotes left: %s" % antidotes_left, 700, 612)
+	# Exit button
+	Button.update(screen, exit_list)
+
+def start_new_game(players=2):
+	global Monster, Hunter, Hunter2, Hunter3, pieces, Hunters, Monsters, turn_index, current_turn, current_hunter, current_monster, Playing, Players
+	Piece.monster_number = 2
+	Monster = Piece(0, "Monster", "Monster 1")
+	Hunter = Piece(24, "Hunter", "Hunter 1")
+	Hunter2 = Piece(19, "Hunter", "Hunter 2")
+	Hunter3 = Piece(23, "Hunter", "Hunter 3")
+	pieces = []
+	Hunters = [Hunter]
+	Monsters = [Monster]
+	turn_index = 0
+	current_turn = 0
+	current_hunter = Hunter
+	current_monster = Monster
+	get_new_map()
+	if players == 2:
+		pieces = [Hunter, Monster]
+	elif players == 3:
+		pieces = [Hunter, Hunter2, Monster]
+		Hunters.append(Hunter2)
+	elif players == 4:
+		pieces = [Hunter, Hunter2, Hunter3, Monster]
+		Hunters.append(Hunter2)
+		Hunters.append(Hunter3)
+	Playing = True
+	Players = players
 
 Players = None
 Playing = False
+exit_button = Button("EXIT", 10, 602, 50, 25, RED, BRIGHT_RED, "exit")
+exit_list = [exit_button]
 while True:
 
 	screen = pygame.display.get_surface()
@@ -628,18 +656,11 @@ while True:
 	else:
 		Button.update(screen, home_screen.Button_List)
 		if Players == 2:
-			pieces = [Hunter, Monster]
-			Playing = True
+			start_new_game()
 		elif Players == 3:
-			pieces = [Hunter, Hunter2, Monster]
-			Hunters.append(Hunter2)
-			Playing = True
+			start_new_game(3)
 		elif Players == 4:
-			pieces = [Hunter, Hunter2, Hunter3, Monster]
-			Hunters.append(Hunter2)
-			Hunters.append(Hunter3)
-			Playing = True
-
+			start_new_game(4)
 	pygame.display.set_caption("The Thing     FPS: %s" % int(clock.get_fps()))
 	pygame.display.flip()
 	clock.tick(FPS)
