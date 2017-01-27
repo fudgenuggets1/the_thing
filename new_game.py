@@ -41,14 +41,7 @@ screen_width = screen.get_width()
 clock = pygame.time.Clock()
 FPS = 20
 total_frames = 0
-rectangles = []
-antidotes_left = 4
-antidotes = 0
-pause_for = False
 
-gas = False
-radar = True
-starting_spot = True
 
 def toggle_fullscreen():
 	screen = pygame.display.get_surface()
@@ -383,6 +376,18 @@ class Card(pygame.sprite.Sprite):
 		piece.room.card = None
 		pause_for = False
 
+	@staticmethod
+	def get_antidotes():
+		global total_antidotes, antidotes_left, antidotes
+		antidote_cards = []
+		for card in Card.card_list:
+			if card[0] == "Antidote":
+				antidote_cards.append(card)
+		total_antidotes = len(antidote_cards)
+		antidotes_left = total_antidotes
+		antidotes = 0
+
+
 class Room():
 
 	room_list = []
@@ -571,6 +576,9 @@ def end_game(screen, winner):
 	radar = True
 
 def display_info(screen):
+	# Antidotes
+	global antidotes_left
+	antidotes_left = total_antidotes - antidotes
 	# Info
 	pygame.draw.rect(screen, (155, 155, 155), (0, 600, 800, 25))
 	text_to_screen(screen, "%s's turn" % current_turn.name, 400, 612)
@@ -579,6 +587,7 @@ def display_info(screen):
 	Button.update(screen, exit_list)
 
 def start_new_game(players=2):
+	# All the poorly coded globas :)
 	global Monster, Hunter, Hunter2, Hunter3, pieces, Hunters, Monsters, turn_index, current_turn, current_hunter, current_monster, Playing, Players
 	Piece.monster_number = 2
 	Monster = Piece(0, "Monster", "Monster 1")
@@ -593,6 +602,8 @@ def start_new_game(players=2):
 	current_hunter = Hunter
 	current_monster = Monster
 	get_new_map()
+	Card.get_antidotes()
+	
 	if players == 2:
 		pieces = [Hunter, Monster]
 	elif players == 3:
@@ -602,8 +613,17 @@ def start_new_game(players=2):
 		pieces = [Hunter, Hunter2, Hunter3, Monster]
 		Hunters.append(Hunter2)
 		Hunters.append(Hunter3)
+	
 	Playing = True
 	Players = players
+	
+	global antidotes_left, antidotes, pause_for
+	pause_for = False
+
+	global gas, radar, starting_spot
+	gas = False
+	radar = True
+	starting_spot = True
 
 Players = None
 Playing = False
@@ -616,7 +636,6 @@ while True:
 	screen.fill(FLORAL_WHITE)
 
 	interaction(screen)
-	antidotes_left = 4 - antidotes
 
 	if Playing:
 		# Logic
